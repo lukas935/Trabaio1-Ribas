@@ -646,6 +646,15 @@ void removerNoCodigo(No2 *no, char *codigo) {
     free(atual);
 }
 
+char* titulofromcodigo(FILE *Filme, int rnn) {
+    char codigo[5];
+    char titulo[63];
+
+    fseek(Filme, rnn * 192, SEEK_SET);
+    fscanf(Filme, "%[^@]@%[^@]@", codigo, titulo);
+    return titulo;
+}
+
 void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2) {
     char codigo[5];
     char titulo[63];
@@ -661,7 +670,7 @@ void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2) {
         return;
     }
 
-    string titulo = titulofromcodigo(Filme,rnn);
+    strcpy(titulo, titulofromcodigo(Filme,rnn));
 
     fseek(Filme,rnn * 192, SEEK_SET);
     fputs("*|",Filme);
@@ -672,18 +681,12 @@ void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2) {
 
 void removeFilmedoindice(indice1 *index1,indice2 *index2,char codigo[5],char titulo[63]){
     removerNo1(index1,codigo);
-    No1 *no2 = buscano2(index2, titulo);
+    No2 *no2 = buscano2(index2, titulo);
     removerNoCodigo(no2,codigo);
 
     if(no2->inicio == NULL)
         removeNo2(index2,titulo);
 }
-
-/*
-removerNo1(index1, codigo);
-No1 *no1 = buscano1(index1, titulo);
-removerNoCodigo(no1, codigo);
- */
 
 void limpabuffer() {
     int rem;
