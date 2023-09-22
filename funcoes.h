@@ -80,6 +80,8 @@ void buscar_Titulo(FILE *Filme, indice1 *index1, indice2 *index2);
 
 void dar_nota(FILE *Filme, indice1 *index1);
 
+void removeFilmedoindice(indice1 *index1, indice2  *index2, char codigo[5], char titulo[63]);
+
 void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2);
 
 void removerNoCodigo(No2 *no, char *codigo);

@@ -606,6 +606,33 @@ void removerNo1(indice1 *index, char codigo[5]) {
     }
 }
 
+void removeNo2(indice2 *index, char titulo[63]) {
+    No2 *atual, *anterior;
+
+    int left = 0;
+    int right = index->tamanho - 1;
+    int middle;
+
+    while (left <= right) {
+        middle = left + (right - left) / 2;
+
+        atual = index->inicio;
+        for (int i = 0; i < middle; i++) {
+            anterior = atual;
+            atual = atual->prox;
+        }
+
+        if (strcmp(atual->chave, titulo) == 0) {
+            anterior->prox = atual->prox;
+            free(atual);
+            return;
+        } else if (strcmp(atual->chave, titulo) < 0)
+            left = middle + 1;
+        else
+            right = middle - 1;
+    }
+}
+
 void removerNoCodigo(No2 *no, char *codigo) {
     NoCodigo *atual = no->inicio;
     NoCodigo *ant;
@@ -634,13 +661,22 @@ void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2) {
         return;
     }
 
-    titulo = titulofromcodigo(filme,rnn);
+    string titulo = titulofromcodigo(Filme,rnn);
 
     fseek(Filme,rnn * 192, SEEK_SET);
     fputs("*|",Filme);
 
-    removeFilme(*index1, *index2, codigo, titulo);
+    removeFilmedoindice(*index1, *index2, codigo, titulo);
 
+}
+
+void removeFilmedoindice(indice1 *index1,indice2 *index2,char codigo[5],char titulo[63]){
+    removerNo1(index1,codigo);
+    No1 *no2 = buscano2(index2, titulo);
+    removerNoCodigo(no2,codigo);
+
+    if(no2->inicio == NULL)
+        removeNo2(index2,titulo);
 }
 
 /*
