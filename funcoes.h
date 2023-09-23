@@ -46,7 +46,7 @@ typedef struct {
 
 int determina_endereco_cod(indice1 *index, char *codigo);
 
-No2 *buscano2(indice2 *index, char titulopt[62]);
+No2 *buscano2(indice2 *index, char titulopt[63]);
 
 void insereNo1(indice1 *index1, No1 *pNo1);
 
@@ -62,11 +62,11 @@ indice1 *refazer1(FILE *Filme);
 
 indice2 *refazer2(FILE *Filme);
 
-void SaveIndex1(indice1 *prim);
+void SaveIndex1(FILE *Index1, indice1 *prim);
 
-void SaveIndex2(indice2 *secund);
+void SaveIndex2(FILE *Index2, indice2 *secund);
 
-void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2);
+void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2, FILE *arqindex1, FILE *arqindex2);
 
 void imprimir_filme(FILE *Filme, int rnn);
 
@@ -80,15 +80,15 @@ void buscar_Titulo(FILE *Filme, indice1 *index1, indice2 *index2);
 
 void dar_nota(FILE *Filme, indice1 *index1);
 
-void removeFilmedoindice(indice1 *index1, indice2  *index2, char codigo[5], char titulo[63]);
+void removeFilmedoindice(indice1 *index1, indice2  *index2, char codigo[6], char titulo[63]);
 
-void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2);
+void Remove_filme(FILE *Filme, indice1 **index1, indice2 **index2, FILE *arqindex1, FILE *arqindex2);
 
 void removerNoCodigo(No2 *no, char *codigo);
 
 void freeindex1(indice1 *prim);
 
-void freeindex2(indice1 *prim);
+void freeindex2(indice2 *secund);
 
 void freeCodigos(NoCodigo *inicio);
 

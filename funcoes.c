@@ -11,7 +11,7 @@ No1 *novono1(char *codigo, int rnn) {
 
 No2 *novono2(char *titulo) {
     No2 *novo = malloc(sizeof(No2));
-    novo->chave = malloc(62);
+    novo->chave = malloc(63);
     strcpy(novo->chave, titulo);
     novo->inicio = NULL;
     novo->prox = NULL;
@@ -40,17 +40,21 @@ void listar_filme(FILE *Filme) {
 void buscar_filme(FILE *Filme, indice1 *index1, indice2 *index2) {
     int op;
     do {
+        printf("\ndigite 0 para voltar");
         printf("\ndigite 1 para buscar por codigo");
-        printf("\ndigite 2 para buscar por titulo");
+        printf("\ndigite 2 para buscar por titulo\n");
         scanf("%hd", &op);
+        limpabuffer();
 
         switch (op) {
             case 1:
                 buscarChave(Filme, index1);
                 break;
             case 2:
-                buscar_Titulo(Filme, NULL, index2);
+                buscar_Titulo(Filme, index1, index2);
                 break;
+            case 0:
+                return;
             default:
                 puts("\nopcao invalida");
                 break;
@@ -60,13 +64,13 @@ void buscar_filme(FILE *Filme, indice1 *index1, indice2 *index2) {
 
 void imprimir_filme(FILE *Filme, int rnn) {
     info_filme *f = malloc(sizeof(info_filme));
-    fseek(Filme, rnn * 193, SEEK_SET);
+    fseek(Filme, rnn * 192, SEEK_SET);
 
     fscanf(Filme, "%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%[^@]@%c@", f->cod_filme, f->titulopt, f->titulo, f->diretor,
            f->ano,
-           f->pais, f->nota);
+           f->pais, &f->nota);
 
-    printf("\nCodigo: %s", f->cod_filme);
+    printf("\n\nCodigo: %s", f->cod_filme);
     printf("\nTitulo em Portugues: %s", f->titulopt);
     printf("\nTitulo Original: %s", f->titulo);
     printf("\nDiretor: %s", f->diretor);
@@ -77,7 +81,7 @@ void imprimir_filme(FILE *Filme, int rnn) {
 }
 
 void buscarChave(FILE *Filme, indice1 *index1) {
-    char *codigo = malloc(5);
+    char codigo[6];
     int rnn;
 
     printf("\ndigite a chave: ");
@@ -90,22 +94,28 @@ void buscarChave(FILE *Filme, indice1 *index1) {
         return;
     }
 
-    printf("\n%d", rnn);
+    printf("\n");
     imprimir_filme(Filme, rnn);
 }
 
 void buscar_Titulo(FILE *Filme, indice1 *index1, indice2 *index2) {
-    char *titulo = malloc(63);
+    char titulo[63];
     No2 *no2;
     NoCodigo *inicio;
-    char codigo[5];
+    char codigo[6];
     int rnn;
 
     printf("\ndigite o titulo: ");
-    scanf("%[^\n]s", titulo);
+    scanf("%[^\n]62s", titulo);
     limpabuffer();
 
     no2 = buscano2(index2, titulo);
+
+    if (no2 == NULL) {
+        printf("\nesse titulo não esta cadastrado");
+        return;
+    }
+
     inicio = no2->inicio;
 
     while (inicio != NULL) {
@@ -123,14 +133,14 @@ void buscar_Titulo(FILE *Filme, indice1 *index1, indice2 *index2) {
 }
 
 void dar_nota(FILE *Filme, indice1 *index1) {
-    char *codigo = malloc(6);
+    char codigo[6];
     int rnn;
-    char *filme = malloc(193);
+    char filme[193];
     char atual;
     char nova;
 
     printf("\nInsira o codigo do filme: ");
-    scanf("%4s", codigo);
+    scanf("%5s", codigo);
     limpabuffer();
 
     rnn = determina_endereco_cod(index1, codigo);
@@ -141,27 +151,21 @@ void dar_nota(FILE *Filme, indice1 *index1) {
     fseek(Filme, rnn * 192, SEEK_SET);
     fgets(filme, 192, Filme);
     sscanf(filme, "%*[^@]@%*[^@]@%*[^@]@%*[^@]@%*[^@]@%*[^@]@%c@", &atual);
+    limpabuffer();
 
     printf("\nnota atual: %c", atual);
     printf("\nnova nota: ");
     scanf("%c", &nova);
+    limpabuffer();
 
     if (!isdigit(nova)) {
         puts("\nnota invalida!");
         return;
     }
 
-    int contador = 0;
-    char c;
-
-    fseek(Filme, rnn * 193, SEEK_SET);
-    while (contador < 6) {
-        c = fgetc(Filme);
-        if (c == '@')
-            contador++;
-    }
-    fseek(Filme, ftell(Filme), SEEK_SET);
+    fseek(Filme, -2, ftell(Filme));
     fputc(nova, Filme);
+    printf("\nnota alterada com sucesso");
 }
 
 int determina_endereco_cod(indice1 *index, char *codigo) {
@@ -182,13 +186,13 @@ int determina_endereco_cod(indice1 *index, char *codigo) {
         else if (strcmp(aux->chave, codigo) < 0)
             left = middle + 1;
         else {
-            right = middle + 1;
+            right = middle - 1;
         }
     }
     return -1;
 }
 
-void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2) {
+void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2, FILE *arqindex1, FILE *arqindex2) {
     char nome[15];
     char sobrenome[15];
     info_filme *f = malloc(sizeof(info_filme));
@@ -202,7 +206,7 @@ void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2) {
 
     printf("\nDigite o primeiro nome do diretor: ");
     scanf("%14s", nome);
-    limpabuffer;
+    limpabuffer();
 
     printf("\nDigite o sobrenome do diretor: ");
     scanf("%14s", sobrenome);
@@ -264,6 +268,12 @@ void Insere_filme(FILE *Filme, indice1 **index1, indice2 **index2) {
     rnn = ftell(Filme) / 192;
     fprintf(Filme, "%s", filme);
 
+    fseek(arqindex1,0,SEEK_SET);
+    fputc('1',arqindex1);
+
+    fseek(arqindex2,0,SEEK_SET);
+    fputc('1',arqindex2);
+
     No1 *novo1 = novono1(f->cod_filme, rnn);
     No2 *novo2 = buscano2(*index2, f->titulopt);
     NoCodigo *novoC = novoNoCodigo(f->cod_filme);
@@ -294,9 +304,19 @@ void inserecod(No2 *pNo2, NoCodigo *pCodigo) {
         anterior = aux;
         aux = aux->prox;
     }
-    if (strcmp(pCodigo->codigo, aux->codigo) < 0) {
-        pCodigo->prox = aux;
+
+    if (aux == NULL) {
         anterior->prox = pCodigo;
+        return;
+    }
+    if (strcmp(pCodigo->codigo, aux->codigo) < 0) {
+        if (anterior == NULL) {
+            pCodigo->prox = pNo2->inicio;
+            pNo2->inicio = pCodigo;
+        } else {
+            anterior->prox = pCodigo;
+            pCodigo->prox = aux;
+        }
         return;
     }
     anterior->prox = pCodigo;
@@ -317,14 +337,23 @@ void insereNo1(indice1 *index1, No1 *pNo1) {
         anterior = aux;
         aux = aux->prox;
     }
-    if (strcmp(pNo1->chave, aux->chave) < 0) {
-        pNo1->prox = aux;
+
+    if (aux == NULL) {
         anterior->prox = pNo1;
         index1->tamanho++;
         return;
     }
-    anterior->prox = pNo1;
-    index1->tamanho++;
+
+    if (strcmp(pNo1->chave, aux->chave) < 0) {
+        if (anterior == NULL) {
+            pNo1->prox = index1->inicio;
+            index1->inicio = pNo1;
+        } else {
+            anterior->prox = pNo1;
+            pNo1->prox = aux;
+        }
+        index1->tamanho++;
+    }
 }
 
 void insereNo2(indice2 *index2, No2 *pNo2) {
@@ -341,17 +370,26 @@ void insereNo2(indice2 *index2, No2 *pNo2) {
         anterior = aux;
         aux = aux->prox;
     }
-    if (strcmp(pNo2->chave, aux->chave) < 0) {
-        pNo2->prox = aux;
+    if (aux == NULL) {
         anterior->prox = pNo2;
         index2->tamanho++;
         return;
     }
-    anterior->prox = pNo2;
-    index2->tamanho++;
+
+    if (strcmp(pNo2->chave, aux->chave) < 0) {
+        if (anterior == NULL) {
+            pNo2->prox = index2->inicio;
+            index2->inicio = pNo2;
+        } else {
+            anterior->prox = pNo2;
+            pNo2->prox = aux;
+        }
+        index2->tamanho++;
+        return;
+    }
 }
 
-No1 *buscano1(indice1 *index, char codigo[5]) {
+No1 *buscano1(indice1 *index, char codigo[6]) {
     No1 *atual;
 
     int left = 0;
@@ -375,14 +413,14 @@ No1 *buscano1(indice1 *index, char codigo[5]) {
     return NULL;
 }
 
-No2 *buscano2(indice2 *index, char titulopt[62]) {
+No2 *buscano2(indice2 *index, char titulopt[63]) {
     if (index->inicio == NULL)
         return NULL;
 
     No2 *aux;
 
     int left = 0;
-    int right = index->tamanho;
+    int right = index->tamanho - 1;
     int middle;
 
     while (left <= right) {
@@ -396,7 +434,7 @@ No2 *buscano2(indice2 *index, char titulopt[62]) {
         else if (strcmp(aux->chave, titulopt) < 0)
             left = middle + 1;
         else {
-            right = middle + 1;
+            right = middle - 1;
         }
     }
     return NULL;
@@ -425,7 +463,7 @@ indice1 *ler_indice1(FILE *indice) {
     int rnn;
 
     fseek(indice, 1, SEEK_SET);
-    while (fscanf(indice, "%s@%d@", codigo, &rnn) != EOF) {
+    while (fscanf(indice, "%[^@]@%d@", codigo, &rnn) != EOF) {
         aux1 = novono1(codigo, rnn);
         insereNo1(novo, aux1);
     }
@@ -443,12 +481,14 @@ indice2 *ler_indice2(FILE *indice) {
     NoCodigo *auxC = NULL;
 
     fseek(indice, 1, SEEK_SET);
-    while (fscanf(indice, "%[\n]s@%s@", titulo, codigos) != EOF) {
+    while (fscanf(indice, "%[^@]@%[^@]@", titulo, codigos) != EOF) {
         aux2 = novono2(titulo);
         auxC = NULL;
-        while (sscanf(codigos, "%s,", codigo) == 1) {
+        int i = 0;
+        while (sscanf_s(codigos + i, "%5s", codigo, sizeof(codigo)) == 1) {
             auxC = novoNoCodigo(codigo);
             inserecod(aux2, auxC);
+            i += 5;
         }
         insereNo2(novo, aux2);
     }
@@ -460,12 +500,12 @@ indice1 *refazer1(FILE *Filme) {
     int rnn = 0;
 
     char filme[193];
-    char codigo[5];
+    char codigo[6];
 
     No1 *atual = NULL;
 
     fseek(Filme, 0, SEEK_SET);
-    while (fscanf(Filme, "%[^\n]193s", filme) != EOF) {
+    while (fscanf(Filme, "%[^\n]192s", filme) != EOF) {
         if (filme[0] != '*' && filme[1] != '|') {
             sscanf(filme, "%[^@]@", codigo);
             atual = novono1(codigo, rnn);
@@ -480,14 +520,14 @@ indice2 *refazer2(FILE *Filme) {
     indice2 *novo = novoindice2();
 
     char filme[193];
-    char codigo[5];
-    char titulo[62];
+    char codigo[6];
+    char titulo[63];
 
     No2 *atual2 = NULL;
     NoCodigo *atualC = NULL;
 
     fseek(Filme, 0, SEEK_SET);
-    while (fscanf(Filme, "%[^\n]193s", filme) != EOF) {
+    while (fscanf(Filme, "%192[^\n]s", filme) != EOF) {
         if (filme[0] != '*' && filme[1] != '|') {
             sscanf(filme, "%[^@]@%[^@]@", codigo, titulo);
 
@@ -504,66 +544,62 @@ indice2 *refazer2(FILE *Filme) {
     return novo;
 }
 
-void SaveIndex1(indice1 *prim) {
-    FILE *iprimary = fopen("iprimary.idx", "w");
+void SaveIndex1(FILE *Index1, indice1 *prim) {
+    fseek(Index1, 0, SEEK_SET);
 
-    fputc('1', iprimary);
+    fputc('1', Index1);
 
     No1 *inicioprint = prim->inicio;
     while (inicioprint) {
-        fprintf(iprimary, "%s@%d@", inicioprint->chave, inicioprint->endereco);
+        fprintf(Index1, "%s@%d@", inicioprint->chave, inicioprint->endereco);
         inicioprint = inicioprint->prox;
     }
 
-    fseek(iprimary, 0, SEEK_SET);
-    fputc('0', iprimary);
-    fclose(iprimary);
+    fseek(Index1, 0, SEEK_SET);
+    fputc('0', Index1);
 }
 
 
-void SaveIndex2(indice2 *secund) {
-    FILE *ititle = fopen("data/ititle.idx", "w");
+void SaveIndex2(FILE *Index2, indice2 *secund) {
+    fseek(Index2, 0, SEEK_SET);
 
-    fputc('1', ititle);
+    fputc('1', Index2);
 
     No2 *inicioprint2 = secund->inicio;
     NoCodigo *inicioprintcod;
 
     while (inicioprint2) {
-        fprintf(ititle, "%s@", inicioprint2->chave);
+        fprintf(Index2, "%s@", inicioprint2->chave);
 
         inicioprintcod = inicioprint2->inicio;
         while (inicioprintcod) {
-            fprintf(ititle, "%s", inicioprintcod->codigo);
+            fprintf(Index2, "%s", inicioprintcod->codigo);
             inicioprintcod = inicioprintcod->prox;
         }
-        fputc('@', ititle);
+        fputc('@', Index2);
 
         inicioprint2 = inicioprint2->prox;
     }
 
-    fseek(ititle, 0, SEEK_SET);
-    fputc('0', ititle);
-    fclose(ititle);
+    fseek(Index2, 0, SEEK_SET);
+    fputc('0', Index2);
 }
 
 void freeindex1(indice1 *prim) {
     No1 *aux;
     while (prim->inicio) {
         aux = prim->inicio->prox;
-        free(prim->inicio->chave);
         free(prim->inicio);
         prim->inicio = aux;
     }
     free(prim);
 }
 
-void freeindex2(indice1 *secund) {
+void freeindex2(indice2 *secund) {
     No2 *atual = secund->inicio;
     while (atual != NULL) {
         No2 *temp = atual;
         atual = atual->prox;
-        free(temp->chave);
         freeCodigos(temp->inicio);
         free(temp);
     }
@@ -574,118 +610,122 @@ void freeCodigos(NoCodigo *inicio) {
     while (inicio != NULL) {
         NoCodigo *temp = inicio;
         inicio = inicio->prox;
-        free(temp->codigo);
         free(temp);
     }
 }
 
-void removerNo1(indice1 *index, char codigo[5]) {
-    No1 *atual, *ant;
+void removerNo1(indice1 *index, char codigo[6]) {
+    No1 *atual, *anterior;
+    atual = index->inicio;
+    anterior = NULL;
 
-    int left = 0;
-    int right = index->tamanho - 1;
-    int middle;
-
-    while (left <= right) {
-        middle = left + (right - left) / 2;
-
-        atual = index->inicio;
-        for (int i = 0; i < middle; i++) {
-            ant = atual;
-            atual = atual->prox;
+    while (atual != NULL) {
+        if (strcmp(atual->chave, codigo) == 0) {
+            if (anterior == NULL) {
+                index->inicio = atual->prox;
+            } else {
+                anterior->prox = atual->prox;
+            }
+            free(atual->chave);
+            free(atual);
+            index->tamanho--;
+            return;
         }
 
-        if (strcmp(atual->chave, codigo) == 0) {
-            ant->prox = atual->prox;
-            free(atual);
-            return;
-        } else if (strcmp(atual->chave, codigo) < 0)
-            left = middle + 1;
-        else
-            right = middle - 1;
+        anterior = atual;
+        atual = atual->prox;
     }
+
 }
 
 void removeNo2(indice2 *index, char titulo[63]) {
     No2 *atual, *anterior;
 
-    int left = 0;
-    int right = index->tamanho - 1;
-    int middle;
-
-    while (left <= right) {
-        middle = left + (right - left) / 2;
-
-        atual = index->inicio;
-        for (int i = 0; i < middle; i++) {
-            anterior = atual;
-            atual = atual->prox;
-        }
-
+    while (atual != NULL) {
         if (strcmp(atual->chave, titulo) == 0) {
-            anterior->prox = atual->prox;
+            if (anterior == NULL)
+                index->inicio = atual->prox;
+            else
+                anterior->prox = atual->prox;
+
+            freeCodigos(atual->inicio);
             free(atual);
+            index->tamanho--;
             return;
-        } else if (strcmp(atual->chave, titulo) < 0)
-            left = middle + 1;
-        else
-            right = middle - 1;
+        }
     }
 }
 
 void removerNoCodigo(No2 *no, char *codigo) {
     NoCodigo *atual = no->inicio;
-    NoCodigo *ant;
+    NoCodigo *ant = NULL;
 
-    while (strcmp(atual->codigo, codigo) != 0) {
+    while (atual != NULL && strcmp(atual->codigo, codigo) != 0) {
         ant = atual;
         atual = atual->prox;
+    }
+
+    if (atual != NULL) {
+        if (ant == NULL) {
+            no->inicio = atual->prox;
+        } else {
+            ant->prox = atual->prox;
+        }
+
+        free(atual->codigo);
+        free(atual);
     }
 
     ant->prox = atual->prox;
     free(atual);
 }
 
-char* titulofromcodigo(FILE *Filme, int rnn) {
-    char codigo[5];
-    char titulo[63];
+char *titulofromcodigo(FILE *Filme, int rnn) {
+    char codigo[6];
+    char *titulo = malloc(63);
 
     fseek(Filme, rnn * 192, SEEK_SET);
     fscanf(Filme, "%[^@]@%[^@]@", codigo, titulo);
     return titulo;
 }
 
-void Remove_filme(FILE *Filme,indice1 **index1, indice2 **index2) {
-    char codigo[5];
+void Remove_filme(FILE *Filme, indice1 **index1, indice2 **index2, FILE *arqindex1, FILE *arqindex2) {
+    char codigo[6];
     char titulo[63];
-    int rnn;
+    int rnn = -1;
 
     printf("\ninsira a chave do filme a ser deletado: ");
-    scanf("%4s",codigo);
+    scanf("%5s", codigo);
     limpabuffer();
 
-    rnn = determina_endereco_cod(*index1,codigo);
-    if(rnn == -1){
+    rnn = determina_endereco_cod(*index1, codigo);
+    if (rnn == -1) {
         printf("\nfilme nao encontrado");
         return;
     }
 
-    strcpy(titulo, titulofromcodigo(Filme,rnn));
+    strcpy(titulo, titulofromcodigo(Filme, rnn));
 
-    fseek(Filme,rnn * 192, SEEK_SET);
-    fputs("*|",Filme);
+    fseek(Filme, rnn * 192, SEEK_SET);
+    fputs("*|", Filme);
 
     removeFilmedoindice(*index1, *index2, codigo, titulo);
 
+    fseek(arqindex1,0,SEEK_SET);
+    fputc('1',arqindex1);
+
+    fseek(arqindex2,0,SEEK_SET);
+    fputc('1',arqindex2);
+
 }
 
-void removeFilmedoindice(indice1 *index1,indice2 *index2,char codigo[5],char titulo[63]){
-    removerNo1(index1,codigo);
+void removeFilmedoindice(indice1 *index1, indice2 *index2, char codigo[6], char titulo[63]) {
+    removerNo1(index1, codigo);
     No2 *no2 = buscano2(index2, titulo);
-    removerNoCodigo(no2,codigo);
+    removerNoCodigo(no2, codigo);
 
-    if(no2->inicio == NULL)
-        removeNo2(index2,titulo);
+    if (no2->inicio == NULL)
+        removeNo2(index2, titulo);
 }
 
 void limpabuffer() {

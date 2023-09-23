@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <string.h>
-#include <malloc.h>
 
 #include "funcoes.h"
 
@@ -49,7 +47,7 @@ int main() {
     }
 
     do {
-        printf("Opcao 1: Inserir filme\n");
+        printf("\n\nOpcao 1: Inserir filme\n");
         printf("Opcao 2: Remover filme\n");
         printf("Opcao 3: Dar nota a um filme\n");
         printf("Opcao 4: Buscar filme\n");
@@ -61,11 +59,11 @@ int main() {
         switch (option) {
 
             case 1:
-                Insere_filme(Filme, &prim, &secund);
+                Insere_filme(Filme, &prim, &secund, Index_Primario, Index_Secundario);
                 break;
 
             case 2:
-                Remove_filme(Filme, prim, secund);
+                Remove_filme(Filme, &prim, &secund, Index_Primario, Index_Secundario);
                 break;
 
             case 3:
@@ -88,17 +86,16 @@ int main() {
 
 
     fclose(Filme);
-    SaveIndex1(Index_Primario);
+    SaveIndex1(Index_Primario, prim);
     fclose(Index_Primario);
-    SaveIndex2(Index_Secundario);
+    SaveIndex2(Index_Secundario, secund);
     fclose(Index_Secundario);
 
     freeindex1(prim);
-    freeindex2(prim);
+    freeindex2(secund);
 
     return 0;
 }
-
 
 
 
